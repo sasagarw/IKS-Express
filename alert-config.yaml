@@ -1,0 +1,40 @@
+apiVersion: alertmanager.keikoproj.io/v1alpha1
+kind: WavefrontAlert
+metadata:
+  name: k8s-hpa-pod-insufficient-alert-express
+spec:
+  alertType: CLASSIC
+  alertName: '{{.clusterShortName}}-k8s-hpa-pod-insufficient-alert-express'
+  condition: '(msum(10m, ((align(1m, ts("iks.namespace.app.pod.count", cluster="{{.clusterName}}" and workspace="*"))) <
+              (align(1m, ts("iks.namespace.kube.hpa.spec.min.replicas", cluster="{{.clusterName}}" and workspace="*"))))) = 10.00) > 0'
+  displayExpression: '(msum(10m, ((align(1m, ts("iks.namespace.app.pod.count", cluster="{{.clusterName}}" and workspace="*"))) <
+                      (align(1m, ts("iks.namespace.kube.hpa.spec.min.replicas", cluster="{{.clusterName}}" and workspace="*"))))))'
+  minutes: 10
+  resolveAfterMinutes: 10
+  severity: severe
+  alertCheckFrequency: 10
+  additionalInformation: 'Actual Live Pods Are Below HPA Min Replicas Requirement for {{.clusterName}}. To fix this issue, please follow runbook at https://github.intuit.com/pages/kubernetes/modern-saas-success/support/standard-operating-procedures/#iks-hpa-pods-insufficient'
+  target: '{{.target}}'
+  exportedParams:
+    - clusterName
+    - clusterShortName
+    - target
+  exportedParamsDefaultValues:
+    target: 'sashank_agarwal@intuit.com'
+  tags:
+    - '{{.clusterName}}'
+    - '{{.clusterShortName}}'
+    - k8s-hpa-pod-insufficient-alert-express
+    - IKS-Express
+---
+apiVersion: alertmanager.keikoproj.io/v1alpha1
+kind: AlertsConfig
+metadata:
+  name: alertsconfig
+spec:
+  alerts:
+    k8s-hpa-pod-insufficient-alert-express: {}
+  globalParams:
+    clusterName: <your_cluster_name>
+    clusterShortName: <your_cluster_name>
+    target: <your_email_id>
